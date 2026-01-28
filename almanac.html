@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokémon Tower Defense - Almanac</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .almanac-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            color: white;
+        }
+        
+        .back-button {
+            background: #4CAF50;
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin-bottom: 30px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background-color 0.3s;
+        }
+        
+        .back-button:hover {
+            background: #45a049;
+        }
+        
+        .back-button a {
+            color: white;
+            text-decoration: none;
+        }
+        
+        .almanac-title {
+            text-align: center;
+            color: #FFD700;
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+        
+        .almanac-subtitle {
+            text-align: center;
+            color: #ccc;
+            font-size: 1.2em;
+            margin-bottom: 40px;
+        }
+        
+        .section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .section h2 {
+            color: #FFD700;
+            font-size: 2em;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #FFD700;
+            padding-bottom: 10px;
+        }
+        
+        .section h3 {
+            color: #4CAF50;
+            font-size: 1.5em;
+            margin: 25px 0 15px 0;
+        }
+        
+        .defender-grid, .enemy-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .defender-card, .enemy-card {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .defender-card:hover, .enemy-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+        
+        .defender-name, .enemy-name {
+            color: #FFD700;
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .defender-description, .enemy-description {
+            color: #ccc;
+            line-height: 1.6;
+        }
+        
+        .stats {
+            background: rgba(255, 215, 0, 0.1);
+            border-left: 3px solid #FFD700;
+            padding: 10px 15px;
+            margin-top: 10px;
+            border-radius: 0 5px 5px 0;
+        }
+        
+        .stats strong {
+            color: #FFD700;
+        }
+        
+        .mechanics-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .mechanics-list li {
+            background: rgba(76, 175, 80, 0.1);
+            border-left: 3px solid #4CAF50;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 0 5px 5px 0;
+            color: #ccc;
+        }
+        
+        .mechanics-list li:before {
+            content: "🎮 ";
+            margin-right: 10px;
+        }
+        
+        .difficulty-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        
+        .difficulty-easy { background: #4CAF50; color: white; }
+        .difficulty-medium { background: #FF9800; color: white; }
+        .difficulty-hard { background: #f44336; color: white; }
+    </style>
+</head>
+<body>
+    <div class="almanac-container">
+        <button class="back-button"><a href="index.html">← Back to Main Menu</a></button>
+        
+        <h1 class="almanac-title">🏆 Pokémon Tower Defense Almanac</h1>
+        <p class="almanac-subtitle">Your complete guide to defenders, enemies, and game mechanics</p>
+        
+        <div class="section">
+            <h2>🎮 Game Mechanics</h2>
+            <ul class="mechanics-list">
+                <li>Defenders can be placed on the grid to stop enemies from reaching the end of the path</li>
+                <li>Enemies spawn at regular intervals and move from right to left</li>
+                <li>Resources are earned by defeating enemies and can be used to purchase defenders</li>
+                <li>Each defender has unique abilities, attack ranges, and costs</li>
+                <li>Win by surviving long enough to reach the target score!</li>
+    </ul>
+        </div>
+        
+        <div class="section">
+            <h2>🛡️ Defenders</h2>
+            
+            <h3>🌞 Grass (Day)</h3>
+            <div class="defender-grid">
+                <div class="defender-card">
+                    <div class="defender-name">Bellsprout</div>
+                    <div class="defender-description">A ranged attacker that shoots seeds at enemies from a distance.</div>
+                    <div class="stats"><strong>Cost:</strong> 100 | <strong>Damage:</strong> Medium | <strong>Range:</strong> Long</div>
+                </div>
+                
+                <div class="defender-card">
+                    <div class="defender-name">Floette</div>
+                    <div class="defender-description">A resource generator that produces gold over time to help you expand your defenses.</div>
+                    <div class="stats"><strong>Cost:</strong> 50 | <strong>Production:</strong> Medium | <strong>Special:</strong> Resource Generator</div>
+                </div>
+                
+                <div class="defender-card">
+                    <div class="defender-name">Carnivine</div>
+                    <div class="defender-description">A melee attacker that whips enemies with fast vine attacks at close range.</div>
+                    <div class="stats"><strong>Cost:</strong> 150 | <strong>Damage:</strong> Medium | <strong>Range:</strong> Short</div>
+                </div>
+                
+                <div class="defender-card">
+                    <div class="defender-name">Ferroseed</div>
+                    <div class="defender-description">A defensive tank that deals iron barb damage when enemies attack it.</div>
+                    <div class="stats"><strong>Cost:</strong> 75 | <strong>Defense:</strong> High | <strong>Special:</strong> Counter Damage</div>
+                </div>
+                
+                <div class="defender-card">
+                    <div class="defender-name">Tropius</div>
+                    <div class="defender-description">A powerful ranged attacker that shoots gust attacks with a chance to knockback enemies.</div>
+                    <div class="stats"><strong>Cost:</strong> 275 | <strong>Damage:</strong> High | <strong>Special:</strong> Knockback</div>
+                </div>
+            </div>
+            
+            <h3>🌙 Grass (Night)</h3>
+            <div class="defender-grid">
+                <div class="defender-card">
+                    <div class="defender-name">Oddish</div>
+                    <div class="defender-description">A ranged attacker that fires leaves at enemies from a moderate distance.</div>
+                    <div class="stats"><strong>Cost:</strong> 25 | <strong>Damage:</strong> Low | <strong>Range:</strong> Medium</div>
+                </div>
+                
+                <div class="defender-card">
+                    <div class="defender-name">Morelull</div>
+                    <div class="defender-description">A resource generator that evolves into Shiinotic over time, increasing its production.</div>
+                    <div class="stats"><strong>Cost:</strong> 25 | <strong>Production:</strong> Low → Medium | <strong>Special:</strong> Evolution</div>
+                </div>
+                
+                <div class="defender-card">
+                    <div class="defender-name">Breloom</div>
+                    <div class="defender-description">A melee fighter that throws rapid punches in increasing cycles (1, 2, 3, 4 punches).</div>
+                    <div class="stats"><strong>Cost:</strong> 150 | <strong>Damage:</strong> Medium | <strong>Special:</strong> Combo Attacks</div>
+                </div>
+                
+                <div class="defender-card">
+                    <div class="defender-name">Phantump</div>
+                    <div class="defender-description">A ghostly defender that deals passive AoE damage. Most enemies ignore it, except aliens.</div>
+                    <div class="stats"><strong>Cost:</strong> 125 | <strong>Damage:</strong> Low | <strong>Special:</strong> Ghost Immunity</div>
+                </div>
+                
+                <div class="defender-card">
+                    <div class="defender-name">Eldegoss</div>
+                    <div class="defender-description">A healing defender that regenerates health over time, making it durable in long battles.</div>
+                    <div class="stats"><strong>Cost:</strong> 75 | <strong>Defense:</strong> Low | <strong>Special:</strong> Self Healing</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>👹 Enemies</h2>
+            
+            <h3>🌞 Grass (Day)</h3>
+            <div class="enemy-grid">
+                <div class="enemy-card">
+                    <div class="enemy-name">Elgyem <span class="difficulty-badge difficulty-easy">Easy</span></div>
+                    <div class="enemy-description">Early game enemy with low health and moderate speed. Basic training for your defenders.</div>
+                </div>
+                
+                <div class="enemy-card">
+                    <div class="enemy-name">Gligar <span class="difficulty-badge difficulty-easy">Easy</span></div>
+                    <div class="enemy-description">Early game enemy with moderate health. Slightly tougher than Elgyem.</div>
+                </div>
+                
+                <div class="enemy-card">
+                    <div class="enemy-name">Venipede <span class="difficulty-badge difficulty-medium">Medium</span></div>
+                    <div class="enemy-description">Mid-game enemy that's fast and hungry for grass Pokémon. Moderate health.</div>
+                </div>
+                
+                <div class="enemy-card">
+                    <div class="enemy-name">Parasect <span class="difficulty-badge difficulty-hard">Hard</span></div>
+                    <div class="enemy-description">Strong late-game enemy that appears in groups of three. High health and damage.</div>
+                </div>
+                
+                <div class="enemy-card">
+                    <div class="enemy-name">Crustle <span class="difficulty-badge difficulty-hard">Hard</span></div>
+                    <div class="enemy-description">Extremely tanky late-game enemy with massive health and damage. Very slow but deadly.</div>
+                </div>
+            </div>
+            
+            <h3>🌙 Grass (Night)</h3>
+            <div class="enemy-grid">
+                <div class="enemy-card">
+                    <div class="enemy-name">Poochyena <span class="difficulty-badge difficulty-easy">Easy</span></div>
+                    <div class="enemy-description">Early game enemy that's fast and aggressive. Low health but quick movement.</div>
+                </div>
+                
+                <div class="enemy-card">
+                    <div class="enemy-name">Murkrow <span class="difficulty-badge difficulty-easy">Easy</span></div>
+                    <div class="enemy-description">Basic early-game enemy with no special abilities. Standard health and speed.</div>
+                </div>
+                
+                <div class="enemy-card">
+                    <div class="enemy-name">Venipede <span class="difficulty-badge difficulty-medium">Medium</span></div>
+                    <div class="enemy-description">Fast mid-game enemy with moderate health. Hungry for grass Pokémon.</div>
+                </div>
+                
+                <div class="enemy-card">
+                    <div class="enemy-name">Elgyem <span class="difficulty-badge difficulty-medium">Medium</span></div>
+                    <div class="enemy-description">Stronger at night and can sense ghostly Pokémon. Enhanced from its day version.</div>
+                </div>
+                
+                <div class="enemy-card">
+                    <div class="enemy-name">Beehiyem <span class="difficulty-badge difficulty-medium">Medium</span></div>
+                    <div class="enemy-description">Mid-game enemy with high health and damage. Slow but powerful, can sense ghosts.</div>
+                </div>
+                
+                <div class="enemy-card">
+                    <div class="enemy-name">Mightyena <span class="difficulty-badge difficulty-hard">Hard</span></div>
+                    <div class="enemy-description">Strong late-game enemy that appears in groups. High health and moderate speed.</div>
+                </div>
+                
+                <div class="enemy-card">
+                    <div class="enemy-name">Lycanroc <span class="difficulty-badge difficulty-hard">Hard</span></div>
+                    <div class="enemy-description">Aggressive late-game enemy with high health and damage. Fast and dangerous.</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>💡 Tips & Strategies</h2>
+            <ul class="mechanics-list">
+                <li>Start with resource generators like Floette or Morelull to build your economy</li>
+                <li>Place defenders strategically to cover multiple lanes</li>
+                <li>Use tanky defenders like Ferroseed to block strong enemies</li>
+                <li>Combine different defender types for better coverage</li>
+                <li>Save resources for expensive but powerful defenders like Tropius</li>
+    </ul>
+        </div>
+    </div>
+</body>
+</html>

@@ -8,6 +8,253 @@
 </head>
 <body>
     <canvas id="canvas1"></canvas>
-    <script src="script.js"></script>
+    
+    <script>
+        const canvas = document.getElementById('canvas1');
+        const ctx = canvas.getContext('2d');
+        
+        // Set canvas size
+        canvas.width = 900;
+        canvas.height = 600;
+        
+        // Game state
+        let mouse = { x: 0, y: 0, clicked: false };
+        let completedLevels = {};
+        
+        // Button definitions
+        const buttons = {
+            grassDay: {
+                x: 100,
+                y: 160,
+                width: 120,
+                height: 40,
+                text: 'Grass (Day)',
+                color: '#85D95F',
+                hoverColor: '#45a049',
+                link: 'grass.html'
+            },
+            grassNight: {
+                x: 100,
+                y: 220,
+                width: 120,
+                height: 40,
+                text: 'Grass (Night)',
+                color: '#129471',
+                hoverColor: '#00694F',
+                link: 'grass_night.html'
+            },
+            underWater: {
+                x: 100,
+                y: 280,
+                width: 120,
+                height: 40,
+                text: 'Underwater',
+                color: '#38C1E8',
+                hoverColor: '#1186A6',
+                link: 'underwater.html'
+            },
+            almanac: {
+                x: 775,
+                y: 510,
+                width: 100,
+                height: 50,
+                text: 'Almanac',
+                color: '#FF9800',
+                hoverColor: '#F57C00',
+                link: 'almanac.html'
+            }
+        };
+        
+        // Check completed levels
+        function checkCompletedLevels() {
+            if (localStorage.getItem('grassLevelCompleted') === 'true') {
+                completedLevels.grassDay = {
+                    score: localStorage.getItem('grassLevelScore') || '0',
+                    completed: true
+                };
+            }
+            
+            if (localStorage.getItem('grassNightLevelCompleted') === 'true') {
+                completedLevels.grassNight = {
+                    score: localStorage.getItem('grassNightLevelScore') || '0',
+                    completed: true
+                };
+            }
+            
+            if (localStorage.getItem('underwaterLevelCompleted') === 'true') {
+                completedLevels.underwater = {
+                    score: localStorage.getItem('underwaterLevelScore') || '0',
+                    completed: true
+                };
+            }
+        }
+        
+        // Mouse event handlers
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            mouse.x = e.clientX - rect.left;
+            mouse.y = e.clientY - rect.top;
+        });
+        
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const clickY = e.clientY - rect.top;
+            
+            // Check button clicks
+            for (const [key, button] of Object.entries(buttons)) {
+                if (clickX >= button.x && clickX <= button.x + button.width &&
+                    clickY >= button.y && clickY <= button.y + button.height) {
+                    window.location.href = button.link;
+                }
+            }
+        });
+        
+        // Draw functions
+        function drawBackground() {
+            // Create a gradient background
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#1a1a2e');
+            gradient.addColorStop(1, '#16213e');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Add some subtle pattern
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < canvas.width; i += 50) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, canvas.height);
+                ctx.stroke();
+            }
+            for (let i = 0; i < canvas.height; i += 50) {
+                ctx.beginPath();
+                ctx.moveTo(0, i);
+                ctx.lineTo(canvas.width, i);
+                ctx.stroke();
+            }
+        }
+        
+        function drawTitle() {
+            ctx.fillStyle = '#FFD700';
+            ctx.font = 'bold 48px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('🏆 Pokémon Tower Defense', canvas.width / 2, 80);
+            
+            ctx.fillStyle = '#ccc';
+            ctx.font = '20px Arial';
+            ctx.fillText('Choose your level to begin your adventure!', canvas.width / 2, 120);
+        }
+        
+        function drawButton(button, isHovered) {
+            const color = isHovered ? button.hoverColor : button.color;
+            
+            // Button background
+            ctx.fillStyle = color;
+            ctx.fillRect(button.x, button.y, button.width, button.height);
+            
+            // Button border
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(button.x, button.y, button.width, button.height);
+            
+            // Button text
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 18px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(button.text, button.x + button.width / 2, button.y + button.height / 2 + 6);
+        }
+        
+        function drawTrophy(x, y, score, color, level) {
+            // Trophy background
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(x + 25, y + 25, 25, 0, Math.PI * 2);
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#fff';
+            ctx.stroke();
+            ctx.fill();
+            
+            // Trophy emoji
+            ctx.font = '24px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#000';
+            ctx.fillText('🏆', x + 25, y + 35);
+            
+            // Score text
+            ctx.fillStyle = '#FFD700';
+            ctx.font = '14px Arial';
+            ctx.fillText(level, x + 25, y + 65);
+            ctx.fillText(score + ' pts', x + 25, y + 80);
+        }
+        
+        function drawLevelInfo() {
+            ctx.fillStyle = '#fff';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'left';
+            
+            // Grass Day info
+            ctx.fillText('🌞 Daytime adventure with classic grass Pokémon', 250, 170);
+            ctx.fillText('• Bellsprout, Floette, Carnivine, Ferroseed, Tropius', 250, 185);
+            ctx.fillText('• Win by reaching 50,000 points', 250, 200);
+            
+            // Grass Night info
+            ctx.fillText('🌙 Nighttime challenge with unique abilities', 250, 230);
+            ctx.fillText('• Oddish, Morelull, Breloom, Phantump, Eldegoss', 250, 245);
+            ctx.fillText('• Win by reaching 75,000 points', 250, 260);
+            
+            // Grass Night info
+            ctx.fillText('💧 Underwater adventure with water Pokémon', 250, 290);
+            ctx.fillText('• Oddish, Morelull, Breloom, Phantump, Eldegoss', 250, 305);
+            ctx.fillText('• Win by reaching 100,000 points', 250, 320);
+        }
+        
+        function drawCompletedLevels() {
+            if (completedLevels.grassDay) {
+                drawTrophy(160, 425, completedLevels.grassDay.score, '#85D95F', 'Grass (Day)');
+            }
+            
+            if (completedLevels.grassNight) {
+                drawTrophy(320, 425, completedLevels.grassNight.score, '#129471', 'Grass (Night)');
+            }
+            
+            if (completedLevels.underwater) {
+                drawTrophy(480, 425, completedLevels.underwater.score, '#38C1E8', 'Underwater');
+            }
+        }
+        
+        function drawFooter() {
+            ctx.fillStyle = '#666';
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Use your strategic skills to defend against waves of enemies!', canvas.width / 2, 550);
+        }
+        
+        function animate() {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw everything
+            drawBackground();
+            drawTitle();
+            drawLevelInfo();
+            drawCompletedLevels();
+            drawFooter();
+            
+            // Draw buttons with hover effects
+            for (const [key, button] of Object.entries(buttons)) {
+                const isHovered = mouse.x >= button.x && mouse.x <= button.x + button.width &&
+                                 mouse.y >= button.y && mouse.y <= button.y + button.height;
+                drawButton(button, isHovered);
+            }
+            
+            requestAnimationFrame(animate);
+        }
+        
+        // Initialize and start
+        checkCompletedLevels();
+        animate();
+    </script>
 </body>
 </html>
