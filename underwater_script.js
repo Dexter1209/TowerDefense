@@ -26,11 +26,11 @@ bgMusic.volume = 0.5;  // 0.0 (silent) → 1.0 (full volume)
 
 // Planting cooldown system (Plants vs Zombies style)
 const plantingCooldowns = {
-    1: { cooldown: 0, maxCooldown: 240 }, // Chinchou: 4 seconds
-    2: { cooldown: 0, maxCooldown: 300 }, // Seadra: 5 seconds  
-    3: { cooldown: 0, maxCooldown: 1080 }, // Corsola: 18 seconds
-    4: { cooldown: 0, maxCooldown: 1500 }, // Lumineon: 25 seconds
-    5: { cooldown: 0, maxCooldown: 720 }  // Clawitzer: 12 seconds
+    1: { cooldown: 0, maxCooldown: 420 }, // Chinchou: 7 seconds
+    2: { cooldown: 0, maxCooldown: 420 }, // Seadra: 7 seconds  
+    3: { cooldown: 0, maxCooldown: 1500 }, // Corsola: 25 seconds
+    4: { cooldown: 0, maxCooldown: 1800 }, // Lumineon: 30 seconds
+    5: { cooldown: 0, maxCooldown: 420 }  // Clawitzer: 12 seconds
 };
 
 const gameGrid = [];
@@ -116,78 +116,33 @@ console.log(gameGrid);
 
 //projectiles
 class Projectiles {
-    constructor(x, y, power, pierce = 1) {
+    constructor(x, y, power, speed, imageSrc, effect, pierce = 1) {
         this.x = x;
         this.y = y;
-        this.width = 10;
-        this.height = 10;
+        this.width = 43;
+        this.height = 43;
         this.power = power;
-        this.speed = 2.75;
+        this.speed = speed;
+        this.effect = effect || null; // optional effect
         this.pierce = pierce;
         this.alreadyHit = new Set(); // track enemies this projectile already hit
+
+        this.image = new Image();
+        this.image.src = imageSrc;
     } 
+
     update() {
         this.x += this.speed;
     }
-    draw() {
-        ctx.fillStyle = '#4EACDE';
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.width, 0, Math.PI * 2);
-        ctx.fill();
-    }
-}
 
-class bubbleProjectile extends Projectiles {
-    constructor(x, y, power) {
-        super(x, y, power, 1);
-        this.width = 15;
-        this.height = 15;
-        this.speed = 3.25;
-    }
     draw() {
-        ctx.fillStyle = 'lightblue';
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.width, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#4EACDE';
-        ctx.lineWidth = 4;
-        ctx.stroke();
-    }
-}
-
-class waterProjectile extends Projectiles {
-    constructor(x, y, power) {
-        super(x, y, power, 2);
-        this.width = 10;
-        this.height = 10;
-        this.speed = 3;
-    }
-    draw() {
-        ctx.fillStyle = '#4EACDE';
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.width, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = 'lightblue';
-        ctx.lineWidth = 4;
-        ctx.stroke();
-    }
-}
-
-class pulseProjectile extends Projectiles {
-    constructor(x, y, power) {
-        super(x, y, power, 3);
-        this.width = 15;
-        this.height = 15;
-        this.speed = 4;
-    }
-    draw() {
-        ctx.fillStyle = 'blue';
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.width, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#482DE3';
-        ctx.lineWidth = 4;
-        ctx.stroke();
+        ctx.drawImage(
+            this.image,
+            this.x - this.width / 2,
+            this.y - this.height / 2,
+            this.width,
+            this.height
+        );
     }
 }
 
@@ -197,14 +152,11 @@ function handleProjectiles() {
         projectiles[i].draw();
 
         for (let j = 0; j < enemies.length; j++) {
-            const enemy = enemies[j];
-            if (enemy && projectiles[i] && !projectiles[i].alreadyHit.has(enemy) &&
-                collision(projectiles[i], enemy)) {
-        
-                enemy.health -= projectiles[i].power;
+            if (enemies[j] && projectiles[i] && !projectiles[i].alreadyHit.has(enemies[j]) && collision(projectiles[i], enemies[j])) {
+                enemies[j].takeDamage(projectiles[i].power); // Use new damage method
                 projectiles[i].pierce--;
-                projectiles[i].alreadyHit.add(enemy); // mark this enemy as hit
-        
+                projectiles[i].alreadyHit.add(enemies[j]); // mark this enemy as hit
+                projectiles[i].power *= 0.75; // Reduce power by 25% after each hit
                 if (projectiles[i].pierce <= 0) {
                     projectiles.splice(i, 1);
                     i--;
@@ -214,8 +166,8 @@ function handleProjectiles() {
         }
         
         if (projectiles[i] && projectiles[i].x > canvas.width - cellSize) {
-            projectiles.splice(i, 1); 
-            i--; 
+            projectiles.splice(i, 1); // Remove projectile if it goes off screen
+            i--; // Adjust index after removal
         }
     }
 }
@@ -271,14 +223,15 @@ class Defender {
             this.health = 75;
             this.maxHealth = 75;
             this.resourceDropCooldown = 0;
-            this.nextResourceDrop = Math.floor(Math.random() * 1150 + 1150);
+            this.nextResourceDrop = Math.floor(Math.random() * 1250 + 1150);
             this.isFirstDrop = true;
         } else if (this.chosenDefender === 2) {
             this.cost = 125;
-            this.damage = 20;
+            this.damage = 35;
             this.shootRate = 120;
-            this.health = 120;
-            this.maxHealth = 120;
+            this.projectileSpeed = 3.25;
+            this.health = 180;
+            this.maxHealth = 180;
             this.attackCooldown = 0;
             this.attackCooldownTime = 120; // ~2.3 seconds between shots
         } else if (this.chosenDefender === 3) {
@@ -286,8 +239,9 @@ class Defender {
             this.damage = 15;
             this.attackRange = cellSize * 1; // 3 tiles in front
             this.shootRate = 200;
-            this.health = 1050;
-            this.maxHealth = 1050;
+            this.projectileSpeed = 2.25;
+            this.health = 2550;
+            this.maxHealth = 2550;
             this.attackCooldown = 0;
             this.attackCooldownTime = 200; // ~2.3 seconds between shots
         } else if (this.chosenDefender === 4) {
@@ -298,13 +252,14 @@ class Defender {
             this.aoeCooldown = 0;
             this.aoeCooldownTime = 120;
         } else if (this.chosenDefender === 5) {
-            this.cost = 350;
-            this.damage = 65;
-            this.shootRate = 250;
-            this.health = 200;
-            this.maxHealth = 200;
+            this.cost = 375;
+            this.damage = 100;
+            this.shootRate = 450;
+            this.projectileSpeed = 4.1;
+            this.health = 300;
+            this.maxHealth = 300;
             this.attackCooldown = 0;
-            this.attackCooldownTime = 250; // ~2.3 seconds between shots
+            this.attackCooldownTime = 450; // ~2.3 seconds between shots
         }
 
         this.resourceDropCooldown = 0; // Cooldown for resource drop
@@ -455,7 +410,7 @@ class Defender {
                 let amount = random < 0.2 ? 75 : 25;
                 let width = random < 0.2 ? 45 : 30;
                 let height = random < 0.2 ? 45 : 30;
-                let color = random < 0.2 ? 'gold' : 'purple';
+                let color = random < 0.2 ? 'gold' : 'orange';
 
                 resources.push({
                     amount: amount, // 20% chance for 75, else 25
@@ -502,7 +457,7 @@ class Defender {
                             this.timer++;
                             // Oddish fires projectiles
                             if (this.timer % this.attackCooldownTime === 0) {
-                                projectiles.push(new waterProjectile(this.x + 70, this.y + 50, this.damage));
+                                projectiles.push(new Projectiles(this.x + 70, this.y + 50, this.damage, this.projectileSpeed, 'sprites/projectileWater.png', '', 2));
                                 this.timer = 0;
                             }
                         } else {
@@ -525,7 +480,7 @@ class Defender {
                             this.timer++;
                             // Oddish fires projectiles
                             if (this.timer % this.attackCooldownTime === 0) {
-                                projectiles.push(new bubbleProjectile(this.x + 70, this.y + 50, this.damage));
+                                projectiles.push(new Projectiles(this.x + 70, this.y + 50, this.damage, this.projectileSpeed, 'sprites/projectileBubble.png', '', 1));
                                 this.timer = 0;
                             }
                         } else {
@@ -576,7 +531,7 @@ class Defender {
             if (this.shooting) {
                 this.timer++;
                 if (this.timer % this.shootRate === 0) {
-                    projectiles.push(new pulseProjectile(this.x + 70, this.y + 40, this.damage));
+                    projectiles.push(new Projectiles(this.x + 70, this.y + 50, this.damage, this.projectileSpeed, 'sprites/projectileBigWater.png', '', 3));
                 }
             } else {
                 this.timer = 0;
@@ -959,8 +914,8 @@ class Enemy {
         this.stunTimer = 0;
 
         // ===== Enemy Selection =====
-        const dewpiderThreshold = winningScore * 0.005;
-        const mareanieThreshold = winningScore * 0.009;
+        const dewpiderThreshold = winningScore * 0.004;
+        const mareanieThreshold = winningScore * 0.008;
         const wishiwashiThreshold = winningScore * 0.015;
         const toxapexThreshold = winningScore * 0.07;
         const bruxishThreshold = winningScore * 0.095;
@@ -1095,86 +1050,86 @@ class Enemy {
         // ===== Stats per Enemy =====
         if (this.enemyType === enemyFrillishM) {
             this.health = 200;
-            this.damage = 30;
+            this.damage = 40;
             this.attackInterval = 145;
             this.speed = (Math.random() * 0.2 + 0.6) * 0.4;
 
         } else if (this.enemyType === enemyFrillishF) {
-            this.health = 150;
+            this.health = 170;
             this.damage = 40;
-            this.attackInterval = 140;
+            this.attackInterval = 135;
             this.speed = (Math.random() * 0.2 + 0.6) * 0.55;
 
         } else if (this.enemyType === enemyDewpider) {
             this.health = 225;
-            this.damage = 15;
+            this.damage = 25;
             this.attackInterval = 45;
-            this.speed = (Math.random() * 0.2 + 0.6) * 0.6;
+            this.speed = (Math.random() * 0.2 + 0.6) * 0.63;
 
         } else if (this.enemyType === enemyMareanie) {
-            this.health = 400;         // Quite tanky
-            this.damage = 8;          // Low damage
-            this.attackInterval = 30; 
-            this.speed = (Math.random() * 0.2 + 0.6) * 0.3; // Fast
+            this.health = 450;         // Quite tanky
+            this.damage = 35;          // Low damage
+            this.attackInterval = 120; 
+            this.speed = (Math.random() * 0.2 + 0.6) * 0.4; // Fast
 
         } else if (this.enemyType === enemyWishiwashi) {
-            this.health = 150;         // Tanky
+            this.health = 180;         // Tanky
             this.damage = 20;          // Medium damage
-            this.attackInterval = 60; // Slower attack
+            this.attackInterval = 30; // Slower attack
             this.speed = (Math.random() * 0.25 + 0.5);
 
         } else if (this.enemyType === enemyToxapex) {
-            this.health = 850;        // Early game enemy
-            this.damage = 30;
-            this.attackInterval = 150;
-            this.speed = (Math.random() * 0.35 + 0.65) * 0.35;
+            this.health = 900;        // Early game enemy
+            this.damage = 35;
+            this.attackInterval = 110;
+            this.speed = (Math.random() * 0.35 + 0.65) * 0.45;
 
         } else if (this.enemyType === enemyBruxish) {
-            this.health = 400;        // Extremely tanky
+            this.health = 580;        // Extremely tanky
             this.damage = 50;
-            this.attackInterval = 190;
+            this.attackInterval = 120;
             this.speed = (Math.random() * 0.25 + 0.6); // Fast
 
         } else if (this.enemyType === enemyCarvanha) {
-            this.health = 350;        // Extremely tanky
-            this.damage = 25;
+            this.health = 550;        // Extremely tanky
+            this.damage = 40;
             this.attackInterval = 85;
             this.speed = (Math.random() * 0.1 + 0.6); // Fast
 
         } else if (this.enemyType === enemyJellicentM) {
-            this.health = 600;        // Extremely tanky
+            this.health = 700;        // Extremely tanky
             this.damage = 40;
-            this.attackInterval = 140;
-            this.speed = (Math.random() * 0.3 + 0.6) * 0.2;
+            this.attackInterval = 120;
+            this.speed = (Math.random() * 0.3 + 0.6) * 0.35;
 
         } else if (this.enemyType === enemyJellicentF) {
-            this.health = 700;        // Extremely tanky
-            this.damage = 25;
-            this.attackInterval = 115;
-            this.speed = (Math.random() * 0.3 + 0.6) * 0.25;
+            this.health = 800;        // Extremely tanky
+            this.damage = 45;
+            this.attackInterval = 120;
+            this.speed = (Math.random() * 0.3 + 0.6) * 0.35;
 
         } else if (this.enemyType === enemySharpedo) {
             this.health = 650;        // Extremely tanky
             this.damage = 100;
-            this.attackInterval = 240;
+            this.attackInterval = 120;
             this.speed = (Math.random() * 0.2 + 0.6);
 
         } else if (this.enemyType === enemyDhelmise) {
-            this.health = 100;        // Extremely tanky
-            this.damage = 10;
+            this.health = 900;        // Extremely tanky
+            this.damage = 25;
             this.attackInterval = 50;
             this.speed = (Math.random() * 0.2 + 0.6) * 0.15;
 
         } else if (this.enemyType === enemyGyarados) {
-            this.health = 1000;        // Extremely tanky
-            this.damage = 100;
-            this.attackInterval = 200;
-            this.speed = (Math.random() * 0.2 + 0.6) * 0.15;
+            this.health = 1400;        // Extremely tanky
+            this.damage = 200;
+            this.attackInterval = 160;
+            this.speed = (Math.random() * 0.2 + 0.6) * 0.25;
 
         } else if (this.enemyType === enemyKyogre) {
-            this.health = 5550;        // Extremely tanky
-            this.damage = 100;
-            this.attackInterval = 200;
+            this.health = 6420;        // Extremely tanky
+            this.damage = 150;
+            this.attackInterval = 160;
             this.speed = (Math.random() * 0.2 + 0.6) * 0.15;
 
         } else {
@@ -1386,7 +1341,7 @@ class Resource {
 }
 
 function handleResources() {
-    let elapsedTime = (Date.now() - gameStartTime) / 1000; // in seconds
+    let elapsedTime = (Date.now() - gameStartTime) / 900; // in seconds
 
     // Only start spawning after 5 seconds have passed
     if (elapsedTime >= 5 && frame % 1500 === 0 && score < winningScore) {
@@ -1453,7 +1408,7 @@ else {
     if (chosenDefender === 2) defenderCost = 125;
     if (chosenDefender === 3) defenderCost = 75;
     if (chosenDefender === 4) defenderCost = 225;
-    if (chosenDefender === 5) defenderCost = 350;
+    if (chosenDefender === 5) defenderCost = 375;
 
     if (numberOfResources >= defenderCost) {
         // Check if this defender type is on cooldown

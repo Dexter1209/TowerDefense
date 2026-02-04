@@ -113,39 +113,34 @@ function handleGameGrid() {
 }
 console.log(gameGrid);
 
+
 //projectiles
 class Projectiles {
-    constructor(x, y, power) {
+    constructor(x, y, power, speed, imageSrc, effect) {
         this.x = x;
         this.y = y;
-        this.width = 10;
-        this.height = 10;
+        this.width = 40;
+        this.height = 40;
         this.power = power;
-        this.speed = 2.75;
+        this.speed = speed;
+        this.effect = effect || null; // optional effect
+
+        this.image = new Image();
+        this.image.src = imageSrc;
     } 
+
     update() {
         this.x += this.speed;
     }
-    draw() {
-        ctx.fillStyle = 'black';
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.width, 0, Math.PI * 2);
-        ctx.fill();
-    }
-}
 
-class GustProjectile extends Projectiles {
-    constructor(x, y, power) {
-        super(x, y, power);
-        this.width = 15;
-        this.height = 15;
-        this.speed = 3.75;
-    }
     draw() {
-        ctx.fillStyle = 'lightblue';
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.width, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.drawImage(
+            this.image,
+            this.x - this.width / 2,
+            this.y - this.height / 2,
+            this.width,
+            this.height
+        );
     }
 }
 
@@ -159,9 +154,9 @@ function handleProjectiles() {
                 enemies[j].takeDamage(projectiles[i].power); // Use new damage method
                 
                 // Knockback effect for Tropius gust
-                if (projectiles[i] instanceof GustProjectile) {
-                    if (Math.random() < 0.4) { // 40% chance
-                    enemies[j].x += 20; 
+                if (projectiles[i].effect === 'knockback') {
+                    if (Math.random() < 0.40) {
+                        enemies[j].x += 40;
                     }
                 }
 
@@ -225,6 +220,7 @@ class Defender {
         if (this.chosenDefender === 1) {
             this.cost = 100;
             this.damage = 25; // Bellsprout
+            this.projectileSpeed = 3.25;
             this.health = 100;
             this.maxHealth = 100;
             this.attackCooldown = 0;
@@ -256,9 +252,10 @@ class Defender {
             this.counterCooldown = 0; // Prevents constant damage ticks
             this.counterCooldownTime = 100; // Counter attack cooldown
         } else if (this.chosenDefender === 5) {
-            this.cost = 275;
+            this.cost = 350;
             this.damage = 85;   // Heavier than Bellsprout
-            this.health = 250;  // Reasonable durability
+            this.projectileSpeed = 5;
+            this.health = 350;  // Reasonable durability
             this.maxHealth = 250;
             this.shootRate = 350; // Slower fire rate (higher value = slower)
             this.attackCooldown = 0;
@@ -414,7 +411,7 @@ class Defender {
                 this.timer++;
                 // Bellsprout fires projectiles
                 if (this.timer % this.attackCooldownTime === 0) {
-                    projectiles.push(new Projectiles(this.x + 70, this.y + 50, this.damage));
+                    projectiles.push(new Projectiles(this.x + 70, this.y + 50, this.damage, this.projectileSpeed, 'sprites/projectileSeed.png'));
                     this.timer = 0;
                 }
             } else {
@@ -484,7 +481,8 @@ class Defender {
             if (this.shooting && this.canAttack) {
                 this.timer++;
                 if (this.timer % this.attackCooldownTime === 0) {
-                    projectiles.push(new GustProjectile(this.x + 70, this.y + 40, this.damage));
+                    
+                    projectiles.push(new Projectiles(this.x + 70, this.y + 40, this.damage, this.projectileSpeed, 'sprites/projectileGust.png', 'knockback'));
                     this.timer = 0;
                 }
             } else {
@@ -976,7 +974,7 @@ class Enemy {
 }
 
 function handleEnemies() {
-    let elapsedTime = (Date.now() - gameStartTime) / 1000; // in seconds
+    let elapsedTime = (Date.now() - gameStartTime) / 700; // in seconds
     for (let i = 0; i < enemies.length; i++) {
         enemies[i].update();
         enemies[i].draw();

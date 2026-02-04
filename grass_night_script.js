@@ -26,11 +26,11 @@ bgMusic.volume = 0.5;  // 0.0 (silent) → 1.0 (full volume)
 
 // Planting cooldown system (Plants vs Zombies style)
 const plantingCooldowns = {
-    1: { cooldown: 0, maxCooldown: 240 }, // Oddish: 4 seconds
-    2: { cooldown: 0, maxCooldown: 180 }, // Morelull: 3 seconds  
+    1: { cooldown: 0, maxCooldown: 420 }, // Oddish: 7 seconds
+    2: { cooldown: 0, maxCooldown: 420 }, // Morelull: 7 seconds  
     3: { cooldown: 0, maxCooldown: 900 }, // Breloom: 15 seconds
     4: { cooldown: 0, maxCooldown: 600 }, // Phantump: 10 seconds
-    5: { cooldown: 0, maxCooldown: 540 }  // Eldegoss: 9 seconds
+    5: { cooldown: 0, maxCooldown: 1200 }  // Eldegoss: 20 seconds
 };
 
 const gameGrid = [];
@@ -115,37 +115,31 @@ console.log(gameGrid);
 
 //projectiles
 class Projectiles {
-    constructor(x, y, power) {
+    constructor(x, y, power, speed, imageSrc, effect) {
         this.x = x;
         this.y = y;
-        this.width = 10;
-        this.height = 10;
+        this.width = 40;
+        this.height = 40;
         this.power = power;
-        this.speed = 2.75;
+        this.speed = speed;
+        this.effect = effect || null; // optional effect
+
+        this.image = new Image();
+        this.image.src = imageSrc;
     } 
+
     update() {
         this.x += this.speed;
     }
-    draw() {
-        ctx.fillStyle = 'black';
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.width, 0, Math.PI * 2);
-        ctx.fill();
-    }
-}
 
-class GustProjectile extends Projectiles {
-    constructor(x, y, power) {
-        super(x, y, power);
-        this.width = 15;
-        this.height = 15;
-        this.speed = 3.75;
-    }
     draw() {
-        ctx.fillStyle = 'lightblue';
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.width, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.drawImage(
+            this.image,
+            this.x - this.width / 2,
+            this.y - this.height / 2,
+            this.width,
+            this.height
+        );
     }
 }
 
@@ -156,12 +150,12 @@ function handleProjectiles() {
 
         for (let j = 0; j < enemies.length; j++) {
             if (enemies[j] && projectiles[i] && collision(projectiles[i], enemies[j])) {
-                enemies[j].health -= projectiles[i].power; // Decrease enemy health
+                enemies[j].takeDamage(projectiles[i].power); // Use new damage method
                 
                 // Knockback effect for Tropius gust
-                if (projectiles[i] instanceof GustProjectile) {
-                    if (Math.random() < 0.4) { // 40% chance
-                    enemies[j].x += 20; 
+                if (projectiles[i].effect === 'knockback') {
+                    if (Math.random() < 0.40) {
+                        enemies[j].x += 40;
                     }
                 }
 
@@ -229,10 +223,11 @@ class Defender {
             this.damage = 15; // Oddish
             this.attackRange = cellSize * 4; // 4 tiles in front
             this.shootRate = 150;
+            this.projectileSpeed = 3.25;
             this.health = 50;
             this.maxHealth = 50;
             this.attackCooldown = 0;
-            this.attackCooldownTime = 140; // ~2.3 seconds between shots
+            this.attackCooldownTime = 125; // ~2.3 seconds between shots
         } else if (this.chosenDefender === 2) {
             this.cost = 25;
             this.damage = 40; 
@@ -260,26 +255,26 @@ class Defender {
             this.attackCooldownTime = 35; // ~0.6 seconds between punches
         } else if (this.chosenDefender === 4) {
             this.cost = 125;
-            this.damage = 10; // passive AoE damage
+            this.damage = 4; // passive AoE damage
             this.health = 200;
             this.maxHealth = 200;
             this.aoeCooldown = 0;
-            this.aoeCooldownTime = 250; // ~4.2 seconds between pulses
+            this.aoeCooldownTime = 80; // ~4.2 seconds between pulses
             this.pulses = []; // store expanding pulse effects
         } else if (this.chosenDefender === 5) {
             this.cost = 75;
-            this.health = 800;        // semi-tanky
-            this.maxHealth = 800;     // for healing cap
-            this.healRate = 0.033;     // heal per frame (~3 per second at 60fps)
+            this.health = 1500;        // semi-tanky
+            this.maxHealth = 1500;     // for healing cap
+            this.healRate = 0.10;     // heal per frame (~3 per second at 60fps)
             this.healCooldown = 0;    // timer for gradual healing
-            this.healCooldownTime = 500; // ~3.3 seconds between heals
+            this.healCooldownTime = 1500; // ~3.3 seconds between heals
         } else if (this.chosenDefender === 6) {
             this.cost = 0; // evolution doesn’t cost again
             this.damage = 60; // Shiinotic stronger
             this.health = 200;
             this.maxHealth = 200;
             this.resourceDropCooldown = 0;
-            this.nextResourceDrop = Math.floor(Math.random() * 1100 + 1100); // a bit faster
+            this.nextResourceDrop = Math.floor(Math.random() * 1000 + 1100); // a bit faster
         }
 
         this.resourceDropCooldown = 0; // Cooldown for resource drop
@@ -454,7 +449,7 @@ class Defender {
                             this.timer++;
                             // Oddish fires projectiles
                             if (this.timer % this.attackCooldownTime === 0) {
-                                projectiles.push(new Projectiles(this.x + 70, this.y + 50, this.damage));
+                                projectiles.push(new Projectiles(this.x + 70, this.y + 65, this.damage, this.projectileSpeed, 'sprites/projectileAcid.png'));
                                 this.timer = 0;
                             }
                         } else {
@@ -506,6 +501,7 @@ class Defender {
             if (this.evolutionTimer >= this.evolutionTime) {
                 this.chosenDefender = 6; // evolve to Shiinotic
                 this.health = 200;
+                this.maxHealth = 200;
                 this.damage = 60;
                 console.log("✨ Morelull evolved into Shiinotic!");
             }
@@ -593,7 +589,7 @@ class Defender {
             if (this.shooting) {
                 this.timer++;
                 if (this.timer % this.shootRate === 0) {
-                    projectiles.push(new GustProjectile(this.x + 70, this.y + 40, this.damage));
+                    //projectiles.push(new GustProjectile(this.x + 70, this.y + 40, this.damage));
                 }
             } else {
                 this.timer = 0;
@@ -684,7 +680,7 @@ function handleDefenders() {
                                                             aoeEnemy.takeDamage(defender.damage); // Use new damage method
                             }
                         }
-                        defender.counterCooldown = 250; // cooldown before next pulse
+                        defender.counterCooldown = 80; // cooldown before next pulse
                     }
                 } else {
                     // 🌱 Normal defenders
@@ -993,11 +989,11 @@ class Enemy {
         this.height = cellSize - cellGap * 2;
 
         // ===== Enemy Selection =====
-        const venipedeThreshold = winningScore * 0.05; // 10%
-        const elgyemThreshold = winningScore * 0.15; // 15%
-        const beehiyemThreshold = winningScore * 0.35; // 35%
-        const mightyenaThreshold = winningScore * 0.45; // 45%
-        const lycanrocThreshold = winningScore * 0.60; // 60%
+        const venipedeThreshold = winningScore * 0.008; // 10%
+        const elgyemThreshold = winningScore * 0.02; // 15%
+        const beehiyemThreshold = winningScore * 0.10; // 35%
+        const mightyenaThreshold = winningScore * 0.25; // 45%
+        const lycanrocThreshold = winningScore * 0.40; // 60%
 
         if (score >= lycanrocThreshold) {
             // All enemies can spawn now
@@ -1021,15 +1017,15 @@ class Enemy {
         } else if (score >= beehiyemThreshold) {
             const rand = Math.random();
             // Beehiyem unlocks
-            if (rand < 0.2) this.enemyType = enemyElgyem;
+            if (rand < 0.2) this.enemyType = enemyVenipede;
             else if (rand < 0.55) this.enemyType = enemyPoochyena;
             else if (rand < 0.80) this.enemyType = enemyMurkrow;
-            else if (rand < 0.90) this.enemyType = enemyVenipede;
+            else if (rand < 0.90) this.enemyType = enemyElgyem;
             else this.enemyType = enemyBeehiyem;
         } else if (score >= elgyemThreshold) {
             const rand = Math.random();
             // Parasect unlocks (in groups of 3)
-            if (rand < 0.3) this.enemyType = enemyVenipede;
+            if (rand < 0.3) this.enemyType = enemyElgyem;
             else if (rand < 0.6) this.enemyType = enemyPoochyena;
             else if (rand < 0.85) this.enemyType = enemyMurkrow;
             else this.enemyType = enemyElgyem;
@@ -1047,19 +1043,19 @@ class Enemy {
         // ===== Stats per Enemy =====
         if (this.enemyType === enemyElgyem) {
             this.health = 275;
-            this.damage = 20;
-            this.attackInterval = 150;
+            this.damage = 40;
+            this.attackInterval = 120;
             this.speed = (Math.random() * 0.2 + 0.6) * 0.35;
 
         } else if (this.enemyType === enemyBeehiyem) {
             this.health = 450;
             this.damage = 55;
-            this.attackInterval = 190;
+            this.attackInterval = 120;
             this.speed = (Math.random() * 0.15 + 0.35) * 0.5; // Slower than Elgyem
 
         } else if (this.enemyType === enemyMurkrow) {
             this.health = 125;
-            this.damage = 5;
+            this.damage = 4;
             this.attackInterval = 35;
             this.speed = (Math.random() * 0.2 + 0.6) * 0.5;
 
@@ -1071,26 +1067,26 @@ class Enemy {
 
         } else if (this.enemyType === enemyMightyena) {
             this.health = 400;         // Tanky
-            this.damage = 35;          // Medium damage
-            this.attackInterval = 100; // Slower attack
+            this.damage = 50;          // Medium damage
+            this.attackInterval = 120; // Slower attack
             this.speed = (Math.random() * 0.25 + 0.6) * 0.5;
 
         } else if (this.enemyType === enemyPoochyena) {
             this.health = 100;        // Early game enemy
-            this.damage = 20;
-            this.attackInterval = 150;
+            this.damage = 40;
+            this.attackInterval = 120;
             this.speed = (Math.random() * 0.35 + 0.65) * 0.35;
 
         } else if (this.enemyType === enemyLycanroc) {
             this.health = 800;        // Extremely tanky
-            this.damage = 45;
-            this.attackInterval = 90;
+            this.damage = 40;
+            this.attackInterval = 80;
             this.speed = (Math.random() * 0.25 + 0.6); // Fast
 
         } else {
             this.health = 100;
             this.damage = 20;
-            this.attackInterval = 50;
+            this.attackInterval = 120;
             this.speed = (Math.random() * 0.2 + 0.6) * 0.5;
         }
 
@@ -1189,7 +1185,7 @@ class Enemy {
 }
 
 function handleEnemies() {
-    let elapsedTime = (Date.now() - gameStartTime) / 1000; // in seconds
+    let elapsedTime = (Date.now() - gameStartTime) / 800; // in seconds
     for (let i = 0; i < enemies.length; i++) {
         enemies[i].update();
         enemies[i].draw();
